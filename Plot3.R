@@ -1,0 +1,26 @@
+if(!file.exists("data.zip")){
+  url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00235/household_power_consumption.zip"
+  download.file(url, destfile = "data.zip", method = "curl")
+}
+if(!file.exists("Electric power consumption")){
+  unzip("data.zip")
+}
+library(dplyr)
+dataset <- read.table("household_power_consumption.txt", nrows = 2880, skip = 66637,
+                      na.strings = '?', sep = ";")  #####you can use %in% instead####
+data <- mutate(dataset, V1 = as.Date(dataset$V1, format = "%d/%m/%Y"),
+               V2 = strptime(dataset$V2, format = "%H:%M:%S"))
+data[1:1440,"V2"] <- format(data[1:1440,2],"2007-02-01 %H:%M:%S")
+data[1441:2880,"V2"] <- format(data[1441:2880,2],"2007-02-02 %H:%M:%S")
+names(data) <- c("Date", "Time", "Global_active_power", "Global_reactive_power",
+                 "Voltage", "Global_intensity", "Sub_metering_1", "Sub_metering_2",
+                 "Sub_metering_3")
+with(data, plot(Time, Sub_metering_1, type="n", xlab="",
+                ylab= "Energy sub metering", main = "Energy sub-metering"))
+with(data, lines(Time, Sub_metering_1,))
+with(data, lines(Time, Sub_metering_2, col="red"))
+with(data, lines(Time, Sub_metering_3, col="blue"))
+legend("topright", lty = 1, col = c("black","red","blue"), 
+       legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"))
+dev.copy(png, file = "Plot3.png")
+dev.off()
